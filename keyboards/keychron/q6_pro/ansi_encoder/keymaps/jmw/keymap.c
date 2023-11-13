@@ -16,37 +16,43 @@
 
 #include QMK_KEYBOARD_H
 
-// Nice aliases for the shape keys
-#define KC_CIR  KC_MPRV
-#define KC_TRI  KC_MPLY
-#define KC_SQR  KC_MNXT
-#define KC_CRS  KC_MUTE
-
-#define JMW_MENU KC_F15
-#define JMW_HUE  KC_F16
-
 // clang-format off
-enum layers{
-  MAC_BASE,
-  MAC_FN,
-  WIN_BASE,
-  WIN_FN,
+
+enum jmw_key
+{
+    // Tap/hold keys
+    JMW_MENU = LT(0, KC_F15),
+    JMW_HUE  = LT(0, KC_F16),
+    JMW_SS   = LT(0, KC_PSCR),
+
+    // Shape keys
+    JMW_CIR = KC_MPRV,
+    JMW_TRI = KC_MPLY,
+    JMW_SQR = KC_MNXT,
+    JMW_CRS = KC_MUTE,
 };
 
-const uint16_t PROGMEM shapes_xxxx[] = {KC_CIR, KC_TRI, KC_SQR, KC_CRS, COMBO_END};
+enum layers
+{
+    MAC_BASE,
+    MAC_FN,
+    WIN_BASE,
+    WIN_FN,
+};
 
-const uint16_t PROGMEM shapes_xxxo[] = {KC_CIR, KC_TRI, KC_SQR, COMBO_END};
-const uint16_t PROGMEM shapes_oxxx[] = {KC_TRI, KC_SQR, KC_CRS, COMBO_END};
-const uint16_t PROGMEM shapes_xoxx[] = {KC_CIR, KC_SQR, KC_CRS, COMBO_END};
-const uint16_t PROGMEM shapes_xxox[] = {KC_CIR, KC_TRI, KC_CRS, COMBO_END};
+const uint16_t PROGMEM shapes_xxxx[] = {JMW_CIR, JMW_TRI, JMW_SQR, JMW_CRS, COMBO_END};
 
-const uint16_t PROGMEM shapes_xxoo[] = {KC_CIR, KC_TRI, COMBO_END};
-const uint16_t PROGMEM shapes_ooxx[] = {KC_SQR, KC_CRS, COMBO_END};
-const uint16_t PROGMEM shapes_xoox[] = {KC_CIR, KC_CRS, COMBO_END};
-const uint16_t PROGMEM shapes_oxxo[] = {KC_TRI, KC_SQR, COMBO_END};
-const uint16_t PROGMEM shapes_xoxo[] = {KC_CIR, KC_SQR, COMBO_END};
-const uint16_t PROGMEM shapes_oxox[] = {KC_TRI, KC_CRS, COMBO_END};
+const uint16_t PROGMEM shapes_xxxo[] = {JMW_CIR, JMW_TRI, JMW_SQR, COMBO_END};
+const uint16_t PROGMEM shapes_oxxx[] = {JMW_TRI, JMW_SQR, JMW_CRS, COMBO_END};
+const uint16_t PROGMEM shapes_xoxx[] = {JMW_CIR, JMW_SQR, JMW_CRS, COMBO_END};
+const uint16_t PROGMEM shapes_xxox[] = {JMW_CIR, JMW_TRI, JMW_CRS, COMBO_END};
 
+const uint16_t PROGMEM shapes_xxoo[] = {JMW_CIR, JMW_TRI, COMBO_END};
+const uint16_t PROGMEM shapes_ooxx[] = {JMW_SQR, JMW_CRS, COMBO_END};
+const uint16_t PROGMEM shapes_xoox[] = {JMW_CIR, JMW_CRS, COMBO_END};
+const uint16_t PROGMEM shapes_oxxo[] = {JMW_TRI, JMW_SQR, COMBO_END};
+const uint16_t PROGMEM shapes_xoxo[] = {JMW_CIR, JMW_SQR, COMBO_END};
+const uint16_t PROGMEM shapes_oxox[] = {JMW_TRI, JMW_CRS, COMBO_END};
 
 combo_t key_combos[] = {
     COMBO(shapes_xxxo, KC_F13),
@@ -68,7 +74,7 @@ const uint16_t COMBO_LEN = (sizeof(key_combos) / sizeof(key_combos[0]));
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [MAC_BASE] = LAYOUT_109_ansi(
-        KC_ESC,   KC_BRID,  KC_BRIU,  KC_MCTL,  KC_LPAD,  RGB_VAD,  RGB_VAI,  KC_MPRV,  KC_MPLY,  KC_MNXT,  KC_MUTE,  KC_VOLD,  KC_VOLU,    KC_MUTE,    KC_SNAP,  KC_SIRI,  RGB_MOD,  KC_CIR,   KC_TRI,   KC_SQR,   KC_CRS,
+        KC_ESC,   KC_BRID,  KC_BRIU,  KC_MCTL,  KC_LPAD,  RGB_VAD,  RGB_VAI,  KC_MPRV,  KC_MPLY,  KC_MNXT,  KC_MUTE,  KC_VOLD,  KC_VOLU,    KC_MUTE,    JMW_SS,   JMW_MENU, JMW_HUE,  JMW_CIR,  JMW_TRI,  JMW_SQR,  JMW_CRS,
         KC_GRV,   KC_1,     KC_2,     KC_3,     KC_4,     KC_5,     KC_6,     KC_7,     KC_8,     KC_9,     KC_0,     KC_MINS,  KC_EQL,     KC_BSPC,    KC_INS,   KC_HOME,  KC_PGUP,  KC_NUM,   KC_PSLS,  KC_PAST,  KC_PMNS,
         KC_TAB,   KC_Q,     KC_W,     KC_E,     KC_R,     KC_T,     KC_Y,     KC_U,     KC_I,     KC_O,     KC_P,     KC_LBRC,  KC_RBRC,    KC_BSLS,    KC_DEL,   KC_END,   KC_PGDN,  KC_P7,    KC_P8,    KC_P9,    KC_PPLS,
         KC_CAPS,  KC_A,     KC_S,     KC_D,     KC_F,     KC_G,     KC_H,     KC_J,     KC_K,     KC_L,     KC_SCLN,  KC_QUOT,              KC_ENT,                                   KC_P4,    KC_P5,    KC_P6,
@@ -82,7 +88,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______,            _______,  _______,  _______,  _______,  BAT_LVL,  NK_TOGG,  _______,  _______,  _______,  _______,              _______,              _______,            _______,  _______,  _______,  _______,
         _______,  _______,  _______,                                _______,                                _______,  _______,  _______,    _______,    _______,  _______,  _______,  _______,            _______         ),
     [WIN_BASE] = LAYOUT_109_ansi(
-        KC_ESC,   KC_F1,    KC_F2,    KC_F3,    KC_F4,    KC_F5,    KC_F6,    KC_F7,    KC_F8,    KC_F9,    KC_F10,   KC_F11,   KC_F12,     KC_MUTE,    KC_PSCR,  JMW_MENU, JMW_HUE,  KC_CIR,   KC_TRI,   KC_SQR,   KC_CRS,
+        KC_ESC,   KC_F1,    KC_F2,    KC_F3,    KC_F4,    KC_F5,    KC_F6,    KC_F7,    KC_F8,    KC_F9,    KC_F10,   KC_F11,   KC_F12,     KC_MUTE,    JMW_SS,   JMW_MENU, JMW_HUE,  JMW_CIR,  JMW_TRI,  JMW_SQR,  JMW_CRS,
         KC_GRV,   KC_1,     KC_2,     KC_3,     KC_4,     KC_5,     KC_6,     KC_7,     KC_8,     KC_9,     KC_0,     KC_MINS,  KC_EQL,     KC_BSPC,    KC_INS,   KC_HOME,  KC_PGUP,  KC_NUM,   KC_PSLS,  KC_PAST,  KC_PMNS,
         KC_TAB,   KC_Q,     KC_W,     KC_E,     KC_R,     KC_T,     KC_Y,     KC_U,     KC_I,     KC_O,     KC_P,     KC_LBRC,  KC_RBRC,    KC_BSLS,    KC_DEL,   KC_END,   KC_PGDN,  KC_P7,    KC_P8,    KC_P9,    KC_PPLS,
         KC_CAPS,  KC_A,     KC_S,     KC_D,     KC_F,     KC_G,     KC_H,     KC_J,     KC_K,     KC_L,     KC_SCLN,  KC_QUOT,              KC_ENT,                                   KC_P4,    KC_P5,    KC_P6,
@@ -106,3 +112,48 @@ const uint16_t PROGMEM encoder_map[][1][2] = {
 };
 #endif // ENCODER_MAP_ENABLE
 
+// Emits kc_tap when the key was tapped and kc_hold when the key is pressed
+bool process_tap_hold(const keyrecord_t *record, uint16_t kc_tap, uint16_t kc_hold)
+{
+    if (record->tap.count && record->event.pressed)
+        tap_code16(kc_tap);
+    else if (record->event.pressed)
+        tap_code16(kc_hold);
+
+    return false;
+}
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record)
+{
+    switch (keycode)
+    {
+        #define TAP_HOLD(kc, kc_tap, kc_hold) case (kc): return process_tap_hold(record, (kc_tap), (kc_hold));
+        TAP_HOLD(JMW_MENU, KC_F15,   S(KC_F15));
+        TAP_HOLD(JMW_HUE,  KC_F16,   S(KC_F16));
+        TAP_HOLD(JMW_SS,   KC_PSCR,  S(KC_PSCR));
+        #undef TAP_HOLD
+
+        default: break;
+    }
+
+    return true;
+}
+
+bool encoder_update_user(uint8_t index, bool clockwise)
+{
+    (void) index;
+    uint8_t mod_state = get_mods();
+
+    if (mod_state == MOD_BIT(KC_LSFT))
+    {
+        unregister_mods(MOD_MASK_SHIFT);
+        tap_code16(clockwise ? KC_WH_D : KC_WH_U);
+        set_mods(mod_state);
+    }
+    else
+    {
+        tap_code16(clockwise ? KC_VOLU : KC_VOLD);
+    }
+
+    return false;
+}
