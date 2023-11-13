@@ -157,3 +157,9 @@ bool encoder_update_user(uint8_t index, bool clockwise)
 
     return false;
 }
+
+void keyboard_post_init_user(void)
+{
+    rgb_matrix_enable();
+    rgb_matrix_mode(RGB_MATRIX_CUSTOM_jmw_glimmer);
+}
