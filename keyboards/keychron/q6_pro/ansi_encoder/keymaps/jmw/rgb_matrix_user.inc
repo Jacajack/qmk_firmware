@@ -19,12 +19,12 @@ static void jmw_hsv_to_rgb(float h, float s, float v, float *r, float *g, float 
 	h = h < 1.f ? 6.f * h : 0.f; // handle h=0 <==> h=1
 	switch ((int)h)
 	{
-		case 0: *r = c; *g = h; *b = 0; break;
-		case 1: *r = 2 - h; *g = c; *b = 0; break;
-		case 2: *r = 0; *g = c; *b = h - 2; break;
-		case 3: *r = 0; *g = 4 - h; *b = c; break;
-		case 4: *r = h - 4; *g = 0; *b = c; break;
-		case 5: *r = c; *g = 0; *b = 6 - h; break;
+		case 0: *r = c; *g = c * h; *b = 0; break;
+		case 1: *r = c * (2 - h); *g = c; *b = 0; break;
+		case 2: *r = 0; *g = c; *b = c * (h - 2); break;
+		case 3: *r = 0; *g = c * (4 - h); *b = c; break;
+		case 4: *r = c * (h - 4); *g = 0; *b = c; break;
+		case 5: *r = c; *g = 0; *b = c * (6 - h); break;
 	}
 }
 
@@ -44,7 +44,7 @@ static bool jmw_glimmer(effect_params_t *params)
 
 	RGB_MATRIX_USE_LIMITS(led_min, led_max);
 	st.t = st.ticks * (1.f / JMW_GLIMMER_TPS);
-	if (++st.ticks == JMW_GLIMMER_TPS)
+	if (++st.ticks == JMW_GLIMMER_TPS * 30)
 		st.ticks = 0;
 
 	for (int i = 0; i < JMW_GLIMMER_BINS; i++)
@@ -54,10 +54,10 @@ static bool jmw_glimmer(effect_params_t *params)
 		float sin4_value = sin2_value * sin2_value;
 		float offset = sin4_value * sin4_value;
 
-		float base_hue = 0.75f;
+		float base_hue = st.t * (1.f / 20.f);
 		float intensity = 0.85f;
 
-		float h = fmodf(base_hue + offset * intensity * 0.01f, 1.f);
+		float h = fmodf(base_hue + offset * intensity * 0.015f, 1.f);
 		float s = 1.f;
 		float v = (1.f - intensity) + intensity * offset;
 		float r = 0.f, g = 0.f, b = 0.f;
