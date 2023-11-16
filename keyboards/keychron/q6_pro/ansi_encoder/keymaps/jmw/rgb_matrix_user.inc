@@ -3,15 +3,12 @@ RGB_MATRIX_EFFECT(jmw_glimmer)
 #ifdef RGB_MATRIX_CUSTOM_EFFECT_IMPLS
 #include <math.h>
 
-#define JMW_GLIMMER_BINS 110
-#define JMW_GLIMMER_TPS  1000
-
-struct glimmer_state {
-	uint16_t ticks;
-	float t;
-	float phases[JMW_GLIMMER_BINS];
-	uint8_t rgb[JMW_GLIMMER_BINS][3];
-};
+#define JMW_GLIMMER_BINS    110
+#define JMW_GLIMMER_TPS     1000
+#define JMW_GLIMMER_FPS     100
+#define JMW_GLIMMER_FRAMES  (2 * JMW_GLIMMER_FPS)
+#define JMW_GLIMMER_BASE_HUE_PERIOD 30
+#define JMW_GLIMMER_MAX_TICKS (JMW_GLIMMER_FRAMES * JMW_GLIMMER_TPS / JMW_GLIMMER_FPS)
 
 static void jmw_hsv_to_rgb(float h, float s, float v, float *r, float *g, float *b)
 {
@@ -28,44 +25,83 @@ static void jmw_hsv_to_rgb(float h, float s, float v, float *r, float *g, float 
 	}
 }
 
-static bool jmw_glimmer(effect_params_t *params)
+static void jmw_hsv8_to_rgb8(uint8_t h, uint8_t s, uint8_t v, uint8_t *r, uint8_t *g, uint8_t *b)
 {
-	static struct glimmer_state st;
-	if (params->init)
-	{
-		st = (struct glimmer_state){
-			.ticks = 0,
-			.t = 0.f,
-		};
+	float rf = 0, gf = 0, bf = 0;
+	jmw_hsv_to_rgb(h * (1.f / 255), s * (1.f / 255), v * (1.f / 255), &rf, &gf, &bf);
+	*r = rf * 255.99f;
+	*g = gf * 255.99f;
+	*b = bf * 255.99f;
+}
 
-		for (int i = 0; i < JMW_GLIMMER_BINS; i++)
-			st.phases[i] = rand() * (1.f / RAND_MAX);
+typedef struct jmw_glimmer_state
+{
+	uint16_t base_hue_timer;
+	uint8_t base_hue;
+	uint8_t frames_hsv[JMW_GLIMMER_FRAMES][3];
+
+	uint16_t tick_counters[JMW_GLIMMER_BINS];
+	uint8_t rgb[JMW_GLIMMER_BINS][3];
+} jmw_glimmer_state;
+
+
+
+static void jmw_glimmer_init(jmw_glimmer_state *st)
+{
+	st->base_hue_timer = 0;
+	st->base_hue = 200;
+
+	// Compute single key animation
+	for (int i = 0; i < JMW_GLIMMER_FRAMES; i++)
+	{
+		float t = i * (1.f / JMW_GLIMMER_FPS);
+		float intensity = 0.85f;
+
+		// float val = expf(-2.f * t);
+		float sin_value = sinf((float)M_PI * 1.5f * t);
+		float sin2_value = sin_value * sin_value;
+		float sin4_value = sin2_value * sin2_value;
+		float val = sin4_value * sin4_value;
+
+		st->frames_hsv[i][0] = intensity * val * (0.015f * 255.f);
+		st->frames_hsv[i][1] = 255;
+		st->frames_hsv[i][2] = 255 * ((1.f - intensity) + intensity * val);
 	}
 
+	// Randomize phases
+	for (int i = 0; i < JMW_GLIMMER_BINS; i++)
+		st->tick_counters[i] = rand() % JMW_GLIMMER_MAX_TICKS;
+
+}
+
+static bool jmw_glimmer(effect_params_t *params)
+{
 	RGB_MATRIX_USE_LIMITS(led_min, led_max);
-	st.t = st.ticks * (1.f / JMW_GLIMMER_TPS);
-	if (++st.ticks == JMW_GLIMMER_TPS * 30)
-		st.ticks = 0;
+	static jmw_glimmer_state st;
+
+	if (params->init)
+		jmw_glimmer_init(&st);
+
+	if (++st.base_hue_timer >= JMW_GLIMMER_BASE_HUE_PERIOD * JMW_GLIMMER_TPS / 256)
+	{
+		st.base_hue_timer = 0;
+		st.base_hue++;
+	}
 
 	for (int i = 0; i < JMW_GLIMMER_BINS; i++)
 	{
-		float sin_value = sinf(2.f * (float)M_PI * (1.5f * st.t - st.phases[i]));
-		float sin2_value = sin_value * sin_value;
-		float sin4_value = sin2_value * sin2_value;
-		float offset = sin4_value * sin4_value;
+		int frame_num = st.tick_counters[i] * JMW_GLIMMER_FPS / JMW_GLIMMER_TPS;
+		jmw_hsv8_to_rgb8(
+			st.frames_hsv[frame_num][0] + st.base_hue,
+			st.frames_hsv[frame_num][1],
+			st.frames_hsv[frame_num][2],
+			&st.rgb[i][0],
+			&st.rgb[i][1],
+			&st.rgb[i][2]
+		);
 
-		float base_hue = st.t * (1.f / 20.f);
-		float intensity = 0.85f;
-
-		float h = fmodf(base_hue + offset * intensity * 0.015f, 1.f);
-		float s = 1.f;
-		float v = (1.f - intensity) + intensity * offset;
-		float r = 0.f, g = 0.f, b = 0.f;
-
-		jmw_hsv_to_rgb(h, s, v, &r, &g, &b);
-		st.rgb[i][0] = r * 255;
-		st.rgb[i][1] = g * 255;
-		st.rgb[i][2] = b * 255;
+		if (++st.tick_counters[i] >= JMW_GLIMMER_MAX_TICKS)
+			st.tick_counters[i] = 0;
 	}
 
 	for (uint8_t i = led_min; i < led_max; i++)
