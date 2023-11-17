@@ -10,6 +10,7 @@ RGB_MATRIX_EFFECT(jmw_glimmer)
 #define JMW_GLIMMER_BASE_HUE_PERIOD 30
 #define JMW_GLIMMER_MAX_TICKS (JMW_GLIMMER_FRAMES * JMW_GLIMMER_TPS / JMW_GLIMMER_FPS)
 
+#if 0
 static void jmw_hsv_to_rgb(float h, float s, float v, float *r, float *g, float *b)
 {
 	float c = s * v;
@@ -24,14 +25,15 @@ static void jmw_hsv_to_rgb(float h, float s, float v, float *r, float *g, float 
 		case 5: *r = c; *g = 0; *b = c * (6 - h); break;
 	}
 }
+#endif
 
 static void jmw_hsv8_to_rgb8(uint8_t h, uint8_t s, uint8_t v, uint8_t *r, uint8_t *g, uint8_t *b)
 {
-	float rf = 0, gf = 0, bf = 0;
-	jmw_hsv_to_rgb(h * (1.f / 255), s * (1.f / 255), v * (1.f / 255), &rf, &gf, &bf);
-	*r = rf * 255.99f;
-	*g = gf * 255.99f;
-	*b = bf * 255.99f;
+    HSV hsv = {h, s, v};
+    RGB rgb = hsv_to_rgb(hsv);
+    *r = rgb.r;
+    *g = rgb.g;
+    *b = rgb.b;
 }
 
 typedef struct jmw_glimmer_state
@@ -43,8 +45,6 @@ typedef struct jmw_glimmer_state
 	uint16_t tick_counters[JMW_GLIMMER_BINS];
 	uint8_t rgb[JMW_GLIMMER_BINS][3];
 } jmw_glimmer_state;
-
-
 
 static void jmw_glimmer_init(jmw_glimmer_state *st)
 {
