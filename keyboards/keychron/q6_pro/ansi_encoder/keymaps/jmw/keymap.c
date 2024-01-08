@@ -123,7 +123,8 @@ const uint16_t PROGMEM encoder_map[][1][2] = {
     [MAC_BASE] = {ENCODER_CCW_CW(KC_VOLD, KC_VOLU) },
     [MAC_FN]   = {ENCODER_CCW_CW(RGB_VAD, RGB_VAI) },
     [WIN_BASE] = {ENCODER_CCW_CW(KC_VOLD, KC_VOLU) },
-    [WIN_FN]   = {ENCODER_CCW_CW(RGB_VAD, RGB_VAI) }
+    [WIN_FN]   = {ENCODER_CCW_CW(RGB_VAD, RGB_VAI) },
+    [LAY_CAPS] = {ENCODER_CCW_CW(KC_WH_U, KC_WH_D) },
 };
 #endif // ENCODER_MAP_ENABLE
 
