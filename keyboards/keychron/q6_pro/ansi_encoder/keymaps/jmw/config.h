@@ -63,5 +63,5 @@
 // Mouse config
 #define MOUSEKEY_INTERVAL    16
 #define MOUSEKEY_MAX_SPEED   4
-#define MOUSEKEY_TIME_TO_MAX 45
+#define MOUSEKEY_TIME_TO_MAX 60
 
