@@ -7,3 +7,4 @@ DEBOUNCE_TYPE = sym_defer_pk
 
 # Custom simultaneous BT/USB connection
 SRC += bt_usb.c
+EXTRAFLAGS += -Wl,--wrap=lpm_task -Wl,--wrap=battery_task -Wl,--wrap=indicator_task

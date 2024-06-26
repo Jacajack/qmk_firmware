@@ -1,3 +1,5 @@
+#include <stdbool.h>
+#include "lpm.h"
 #include "quantum.h"
 #include "bluetooth.h"
 #include "indicator.h"
@@ -22,6 +24,11 @@ void bt_usb_set_transport(transport_t t)
 transport_t bt_usb_get_transport(void)
 {
     return bt_usb_transport;
+}
+
+static bool bt_usb_running_on_battery(void)
+{
+    return get_transport() == TRANSPORT_BLUETOOTH && !usb_power_connected();
 }
 
 static uint8_t bt_usb_keyboard_leds(void)
@@ -140,4 +147,40 @@ void usb_transport_enable(bool enable)
     // Hacky as fuck, but hear me out: bt_transport_enable() and 
     // usb_transport_enable() are always called in pair with
     // opposite arguments. We don't really need to handle both of them.
+}
+
+// Note: this overrides lpm_task() in lpm.c with --wrap option
+void __real_lpm_task(void);
+void __wrap_lpm_task(void)
+{
+    // In USB mode we make sure that LPM timer is always reset
+    if (!bt_usb_running_on_battery())
+        lpm_timer_reset();
+
+    __real_lpm_task();
+}
+
+
+// Note this overrides battery_task() in battery.c with --wrap option
+void __real_battery_task(void);
+void __wrap_battery_task(void)
+{
+    static bool was_running_on_battery = false;
+    bool running_on_battery = bt_usb_running_on_battery();
+    bool power_just_connected = was_running_on_battery && !running_on_battery;
+
+    if (running_on_battery || power_just_connected)
+        __real_battery_task();
+
+    was_running_on_battery = running_on_battery;
+}
+
+// Note this overrides indicator_task() in indicator.c with --wrap option
+void __real_indicator_task(void);
+void __wrap_indicator_task(void)
+{
+    if (!bt_usb_running_on_battery())
+        rgb_matrix_disable_time_reset();
+
+    __real_indicator_task();
 }

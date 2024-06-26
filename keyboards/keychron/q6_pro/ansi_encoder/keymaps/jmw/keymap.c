@@ -232,6 +232,11 @@ bool rgb_matrix_indicators_user(void)
 
 void keyboard_post_init_user(void)
 {
+    #ifdef CONSOLE_ENABLE
+        debug_enable = true;
+    #endif
+
     rgb_matrix_enable();
     jmw_update_matrix_effect();
+    dprintf("keyboard_post_init_user() completed!\n");
 }
