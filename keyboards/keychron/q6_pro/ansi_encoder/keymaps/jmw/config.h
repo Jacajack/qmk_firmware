@@ -65,3 +65,4 @@
 #define MOUSEKEY_MAX_SPEED   4
 #define MOUSEKEY_TIME_TO_MAX 60
 
+#define FORCE_NKRO
