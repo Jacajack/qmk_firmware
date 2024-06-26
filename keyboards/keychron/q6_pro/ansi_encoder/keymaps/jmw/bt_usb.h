@@ -1,6 +1,7 @@
 #ifndef JMW_BT_USB_H
 #define JMW_BT_USB_H
 
+#include <stdbool.h>
 #include "transport.h"
 
 void bt_usb_set_transport(transport_t t);

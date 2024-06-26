@@ -15,6 +15,7 @@
  */
 
 #include QMK_KEYBOARD_H
+#include "bt_usb.h"
 
 // clang-format off
 
@@ -48,6 +49,7 @@ enum jmw_key
 
     // Misc aliases
     JMW_BOO = QK_BOOTLOADER,
+    JMW_OUT = QK_OUTPUT_AUTO,
 };
 
 enum layers
@@ -121,7 +123,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______,            _______,  _______,  _______,  _______,  BAT_LVL,  NK_TOGG,  _______,  _______,  _______,  _______,              _______,              _______,            _______,  _______,  _______,  _______,
         _______,  _______,  _______,                                _______,                                _______,  _______,  _______,    _______,    _______,  _______,  _______,  _______,            _______         ),
     [LAY_CAPS] = LAYOUT_109_ansi(
-        _______,       _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,    JMW_BOO,    _______,  _______,  _______,  _______,  _______,  _______,  _______,
+        _______,       _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,    JMW_BOO,    _______,  _______,  _______,  _______,  _______,  _______,  JMW_OUT,
         _______,       JMW_AP1,  JMW_AP2,  JMW_AP3,  JMW_AP4,  JMW_AP5,  _______,  _______,  _______,  _______,  _______,  KC_VOLD,  KC_VOLU,    _______,    _______,  _______,  _______,  _______,  _______,  _______,  _______,
         _______,       JMW_MB2,  KC_WH_U,  JMW_MB1,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,    _______,    _______,  _______,  _______,  _______,  _______,  _______,  _______,
         _______,       _______,  KC_WH_D,  _______,  _______,  _______,  JMW_ML,   JMW_MD,   JMW_MU,   JMW_MR,   _______,  _______,              _______,                                  _______,  _______,  _______,
@@ -139,6 +141,19 @@ const uint16_t PROGMEM encoder_map[][1][2] = {
 };
 #endif // ENCODER_MAP_ENABLE
 
+// Updates matrix effect to reflect current operating mode
+static void jmw_update_matrix_effect(void)
+{
+    if (bt_usb_get_transport() == TRANSPORT_USB)
+        rgb_matrix_mode(RGB_MATRIX_CUSTOM_jmw_glimmer);
+    else
+    {
+        extern rgb_config_t rgb_matrix_config;
+        rgb_matrix_config.hsv = (HSV){0, 0, 255};
+        rgb_matrix_mode(RGB_MATRIX_SOLID_COLOR);
+    }
+}
+
 // Emits kc_tap when the key was tapped and kc_hold when the key is pressed
 bool process_tap_hold(const keyrecord_t *record, uint16_t kc_tap, uint16_t kc_hold)
 {
@@ -150,7 +165,7 @@ bool process_tap_hold(const keyrecord_t *record, uint16_t kc_tap, uint16_t kc_ho
     return false;
 }
 
-bool process_combos(uint16_t keycode, keyrecord_t *record)
+static bool process_combos(uint16_t keycode, keyrecord_t *record)
 {
     switch (keycode)
     {
@@ -165,28 +180,21 @@ bool process_combos(uint16_t keycode, keyrecord_t *record)
     return true;
 }
 
-#if 0
-static bool process_jk_scroll(uint16_t keycode, keyrecord_t *record)
+static bool process_special(uint16_t keycode, keyrecord_t *record)
 {
-    uint8_t mod_state = get_mods();
-    if (mod_state != MOD_BIT(KC_LEFT_GUI))
-        return true;
-
-    if (keycode == KC_J || keycode == KC_K)
+    if (keycode == JMW_OUT && record->event.pressed)
     {
-        unregister_mods(MOD_MASK_GUI);
-        tap_code16(keycode == KC_J ? KC_WH_D : KC_WH_U);
-        set_mods(mod_state);
+        bt_usb_set_transport(bt_usb_get_transport() == TRANSPORT_USB ? TRANSPORT_BLUETOOTH : TRANSPORT_USB);
+        jmw_update_matrix_effect();
         return false;
     }
 
     return true;
 }
-#endif
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record)
 {
-    return process_combos(keycode, record);
+    return process_combos(keycode, record) && process_special(keycode, record);
 }
 
 bool encoder_update_user(uint8_t index, bool clockwise)
@@ -222,5 +230,5 @@ bool rgb_matrix_indicators_user(void)
 void keyboard_post_init_user(void)
 {
     rgb_matrix_enable();
-    rgb_matrix_mode(RGB_MATRIX_CUSTOM_jmw_glimmer);
+    jmw_update_matrix_effect();
 }
