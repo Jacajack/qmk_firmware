@@ -144,9 +144,9 @@ const uint16_t PROGMEM encoder_map[][1][2] = {
 // Updates matrix effect to reflect current operating mode
 static void jmw_update_matrix_effect(void)
 {
-    if (bt_usb_get_transport() == TRANSPORT_USB)
+    if (get_transport() == TRANSPORT_USB || bt_usb_get_transport() == TRANSPORT_USB)
         rgb_matrix_mode(RGB_MATRIX_CUSTOM_jmw_glimmer);
-    else
+    else if (bt_usb_get_transport() == TRANSPORT_BLUETOOTH)
     {
         extern rgb_config_t rgb_matrix_config;
         rgb_matrix_config.hsv = (HSV){0, 0, 255};
@@ -184,8 +184,11 @@ static bool process_special(uint16_t keycode, keyrecord_t *record)
 {
     if (keycode == JMW_OUT && record->event.pressed)
     {
-        bt_usb_set_transport(bt_usb_get_transport() == TRANSPORT_USB ? TRANSPORT_BLUETOOTH : TRANSPORT_USB);
-        jmw_update_matrix_effect();
+        if (get_transport() == TRANSPORT_BLUETOOTH)
+        {
+            bt_usb_set_transport(bt_usb_get_transport() == TRANSPORT_USB ? TRANSPORT_BLUETOOTH : TRANSPORT_USB);
+            jmw_update_matrix_effect();
+        }
         return false;
     }
 
