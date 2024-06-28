@@ -141,19 +141,6 @@ const uint16_t PROGMEM encoder_map[][1][2] = {
 };
 #endif // ENCODER_MAP_ENABLE
 
-// Updates matrix effect to reflect current operating mode
-static void jmw_update_matrix_effect(void)
-{
-    if (get_transport() == TRANSPORT_USB || bt_usb_get_transport() == TRANSPORT_USB)
-        rgb_matrix_mode(RGB_MATRIX_CUSTOM_jmw_glimmer);
-    else if (bt_usb_get_transport() == TRANSPORT_BLUETOOTH)
-    {
-        extern rgb_config_t rgb_matrix_config;
-        rgb_matrix_config.hsv = (HSV){0, 0, 255};
-        rgb_matrix_mode(RGB_MATRIX_SOLID_COLOR);
-    }
-}
-
 // Emits kc_tap when the key was tapped and kc_hold when the key is pressed
 bool process_tap_hold(const keyrecord_t *record, uint16_t kc_tap, uint16_t kc_hold)
 {
@@ -187,7 +174,9 @@ static bool process_special(uint16_t keycode, keyrecord_t *record)
         if (get_transport() == TRANSPORT_BLUETOOTH)
         {
             bt_usb_set_transport(bt_usb_get_transport() == TRANSPORT_USB ? TRANSPORT_BLUETOOTH : TRANSPORT_USB);
-            jmw_update_matrix_effect();
+            // bool bt_mode = bt_usb_get_transport() == TRANSPORT_BLUETOOTH;
+            
+            // jmw_update_matrix_effect();
         }
         return false;
     }
@@ -221,13 +210,20 @@ bool encoder_update_user(uint8_t index, bool clockwise)
 
 bool rgb_matrix_indicators_user(void)
 {
-	if (host_keyboard_led_state().caps_lock)
-		rgb_matrix_set_color(CAPS_LOCK_INDEX, 255, 255, 255);
+    // Bluetooth mode indicator
+    if (bt_usb_get_transport() == TRANSPORT_BLUETOOTH)
+        for (uint8_t id = 16; id <= 19; id++)
+            rgb_matrix_set_color(id, 255, 255, 255);
 
-	if (!host_keyboard_led_state().num_lock)
-		rgb_matrix_set_color(NUM_LOCK_INDEX, 0, 0, 0);
+    // White caps-lock indicator
+    if (host_keyboard_led_state().caps_lock)
+        rgb_matrix_set_color(CAPS_LOCK_INDEX, 255, 255, 255);
 
-	return false;
+    // Black num-lock indicator
+    if (!host_keyboard_led_state().num_lock)
+        rgb_matrix_set_color(NUM_LOCK_INDEX, 0, 0, 0);
+    
+    return false;
 }
 
 void keyboard_post_init_user(void)
@@ -237,6 +233,5 @@ void keyboard_post_init_user(void)
     #endif
 
     rgb_matrix_enable();
-    jmw_update_matrix_effect();
     dprintf("keyboard_post_init_user() completed!\n");
 }
