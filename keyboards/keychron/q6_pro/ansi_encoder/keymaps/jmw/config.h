@@ -66,3 +66,7 @@
 #define MOUSEKEY_TIME_TO_MAX 60
 
 #define FORCE_NKRO
+
+// We're handling the RGB keycodes ourselves 
+#define RGBLIGHT_DISABLE_KEYCODES
+#define RGB_MATRIX_DISABLE_KEYCODES

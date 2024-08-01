@@ -117,7 +117,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_LCTL,       KC_LWIN,  KC_LALT,                                KC_SPC,                                 KC_RALT,  KC_RWIN,  MO(WIN_FN), KC_RCTL,    KC_LEFT,  KC_DOWN,  KC_RGHT,  KC_P0,              KC_PDOT         ),
     [WIN_FN] = LAYOUT_109_ansi(
         _______,       KC_BRID,  KC_BRIU,  KC_TASK,  KC_FILE,  RGB_VAD,  RGB_VAI,  KC_MPRV,  KC_MPLY,  KC_MNXT,  KC_MUTE,  KC_VOLD,  KC_VOLU,    RGB_TOG,    _______,  _______,  RGB_TOG,  _______,  _______,  _______,  _______,
-        _______,       BT_HST1,  BT_HST2,  BT_HST3,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,    _______,    _______,  _______,  _______,  _______,  _______,  _______,  _______,
+        _______,       BT_HST1,  BT_HST2,  BT_HST3,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,    JMW_OUT,    _______,  _______,  _______,  _______,  _______,  _______,  _______,
         RGB_TOG,       RGB_MOD,  RGB_VAI,  RGB_HUI,  RGB_SAI,  RGB_SPI,  _______,  _______,  _______,  _______,  _______,  _______,  _______,    _______,    _______,  _______,  _______,  _______,  _______,  _______,  _______,
         _______,       RGB_RMOD, RGB_VAD,  RGB_HUD,  RGB_SAD,  RGB_SPD,  _______,  _______,  _______,  _______,  _______,  _______,              _______,                                  _______,  _______,  _______,
         _______,            _______,  _______,  _______,  _______,  BAT_LVL,  NK_TOGG,  _______,  _______,  _______,  _______,              _______,              _______,            _______,  _______,  _______,  _______,
@@ -167,6 +167,22 @@ static bool process_combos(uint16_t keycode, keyrecord_t *record)
     return true;
 }
 
+static void jmw_rgblight_swap_config(void)
+{
+	extern rgb_config_t rgb_matrix_config; // defined in rgblight.c
+	static rgb_config_t alt_config = {
+		.enable = true,
+		.mode = RGB_MATRIX_SOLID_COLOR,
+		.hsv = {128, 255, 255},
+		.speed = 127,
+		.flags = LED_FLAG_ALL,
+	};
+
+	rgb_config_t tmp = rgb_matrix_config;
+	rgb_matrix_config = alt_config;
+	alt_config = tmp;
+}
+
 static bool process_special(uint16_t keycode, keyrecord_t *record)
 {
     if (keycode == JMW_OUT && record->event.pressed)
@@ -174,9 +190,7 @@ static bool process_special(uint16_t keycode, keyrecord_t *record)
         if (get_transport() == TRANSPORT_BLUETOOTH)
         {
             bt_usb_set_transport(bt_usb_get_transport() == TRANSPORT_USB ? TRANSPORT_BLUETOOTH : TRANSPORT_USB);
-            // bool bt_mode = bt_usb_get_transport() == TRANSPORT_BLUETOOTH;
-            
-            // jmw_update_matrix_effect();
+			jmw_rgblight_swap_config();
         }
         return false;
     }
@@ -184,9 +198,38 @@ static bool process_special(uint16_t keycode, keyrecord_t *record)
     return true;
 }
 
+static bool process_rgb_keys(uint16_t keycode, keyrecord_t *record)
+{
+	if (!record->event.pressed)
+		return true;
+
+	bool ee_write = bt_usb_get_transport() == TRANSPORT_USB;
+	#define RGB_CTL(x) (ee_write ? rgb_matrix_##x : rgb_matrix_##x##_noeeprom)()
+	switch (keycode)
+	{
+		case RGB_TOG:  RGB_CTL(toggle);         return false;
+		case RGB_MOD:  RGB_CTL(step);           return false;
+		case RGB_RMOD: RGB_CTL(step_reverse);   return false;
+		case RGB_VAI:  RGB_CTL(increase_val);   return false;
+		case RGB_VAD:  RGB_CTL(decrease_val);   return false;
+		case RGB_HUI:  RGB_CTL(increase_hue);   return false;
+		case RGB_HUD:  RGB_CTL(decrease_hue);   return false;
+		case RGB_SAI:  RGB_CTL(increase_sat);   return false;
+		case RGB_SAD:  RGB_CTL(decrease_sat);   return false;
+		case RGB_SPI:  RGB_CTL(increase_speed); return false;
+		case RGB_SPD:  RGB_CTL(decrease_speed); return false;
+	}
+	#undef RGB_CTL
+
+	return true;
+}
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record)
 {
-    return process_combos(keycode, record) && process_special(keycode, record);
+    return
+		process_combos(keycode, record)
+		&& process_special(keycode, record)
+		&& process_rgb_keys(keycode, record);
 }
 
 bool encoder_update_user(uint8_t index, bool clockwise)
