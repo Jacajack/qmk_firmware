@@ -184,3 +184,15 @@ void __wrap_indicator_task(void)
 
     __real_indicator_task();
 }
+
+// Note this overrides LED_DRIVER_SHUTDOWN_ALLOWED() in indicator.c with --wrap option
+bool __real_rgb_matrix_driver_allow_shutdown(void);
+bool __wrap_rgb_matrix_driver_allow_shutdown(void)
+{
+	return true;
+}
+
+// Overrides weak function in indicator.c
+void os_state_indicate(void)
+{
+}
